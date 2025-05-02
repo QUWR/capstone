@@ -44,6 +44,7 @@ public class User {
         this.weight = request.getWeight();
         this.habit = request.getHabit();
         this.preference = request.getPreference();
+        return this;
     }
 
 }

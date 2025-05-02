@@ -21,9 +21,9 @@ import java.io.IOException;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class FlaskService {
+public class FlaskChatService {
 
-    @Value("${flask.api.url}")
+    @Value("${flask.api.endpoints.chat}")
     private String flaskApiUrl;
 
     private final ObjectMapper objectMapper;

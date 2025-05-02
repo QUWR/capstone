@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.capstone.chat.dto.ChatRequest;
 import org.example.capstone.chat.dto.ChatResponse;
-import org.example.capstone.chat.service.FlaskService;
+import org.example.capstone.chat.service.FlaskChatService;
 import org.example.capstone.user.login.dto.CustomUserDetails;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -20,9 +20,9 @@ import java.io.IOException;
 public class ChatController {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final FlaskService flaskService;
+    private final FlaskChatService flaskChatService;
 
-    @MessageMapping("/api/chat")
+    @MessageMapping("/chat.sendMessage")
     public void sendMessage(@Payload ChatRequest chatRequest, @AuthenticationPrincipal CustomUserDetails userDetails) {
         // 인증된 사용자가 없으면 처리하지 않음
         if (userDetails == null) {
@@ -42,7 +42,7 @@ public class ChatController {
             );
 
             // Flask 서버에 요청 전송
-            ChatResponse response = flaskService.sendRequestToFlask(chatRequest);
+            ChatResponse response = flaskChatService.sendRequestToFlask(chatRequest);
 
             // 응답을 사용자에게 전송
             messagingTemplate.convertAndSendToUser(
