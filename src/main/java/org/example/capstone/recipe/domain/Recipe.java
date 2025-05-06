@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.capstone.ingredient.domain.Ingredient;
-import org.example.capstone.nutrition.domain.Nutrition;
 import org.example.capstone.user.domain.User;
 
 import java.util.List;
@@ -34,11 +32,8 @@ public class Recipe {
     @JoinColumn(name = "instruction_id")
     private List<Instruction> instructions;
 
-    @OneToOne
-    @JoinColumn(name = "nurition_id")
-    private Nutrition nutrition;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 

@@ -1,4 +1,4 @@
-package org.example.capstone.ingredient.dto;
+package org.example.capstone.recipe.dto;
 
 
 import lombok.AllArgsConstructor;
@@ -10,7 +10,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IngredientDTO {
+public class InstructionDTO {
 
-    private String name;
+    private String instruction;
+    private int cookingTime;
+
 }

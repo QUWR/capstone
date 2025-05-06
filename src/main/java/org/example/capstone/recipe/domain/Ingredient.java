@@ -1,4 +1,4 @@
-package org.example.capstone.ingredient.domain;
+package org.example.capstone.recipe.domain;
 
 
 import jakarta.persistence.Entity;

@@ -34,7 +34,7 @@ public class NutritionService {
     private final RecipeRepository recipeRepository;
 
     //플라스크에서 영양 정보를 받음
-    public Mono<NutritionDTO> getNutritionFromFlask(Long recipeId){
+    private Mono<NutritionDTO> getNutritionFromFlask(Long recipeId){
         return webClient.get()
                 .uri(nutritionEndpoint + "/{id}", recipeId)
                 .retrieve()
@@ -65,6 +65,7 @@ public class NutritionService {
 
 
         Nutrition nutrition = Nutrition.builder()
+                .recipe(recipe)
                 .calories(nutritionDto.getCalories())
                 .carbohydrate(nutritionDto.getCarbohydrate())
                 .protein(nutritionDto.getProtein())
@@ -78,8 +79,7 @@ public class NutritionService {
 
         Nutrition savedNutritionInfo = nutritionRepository.save(nutrition);
 
-        // 레시피에 영양 성분 정보 연결
-        recipe.setNutrition(savedNutritionInfo);
+
         recipeRepository.save(recipe);
 
         log.info("Flask에서 가져온 영양 성분 정보 저장 완료: ID = {}", savedNutritionInfo.getId());

@@ -1,14 +1,12 @@
 package org.example.capstone.nutrition.domain;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.capstone.recipe.domain.Recipe;
 
 @Entity
 @Data
@@ -20,6 +18,10 @@ public class Nutrition {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToOne
+    @JoinColumn(name = "recipe_id")
+    private Recipe recipe;
 
     private Double calories;        //칼로리
     private Double carbohydrate;    //탄수화물
