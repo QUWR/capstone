@@ -24,17 +24,13 @@ public class Recipe {
     private String name;
     private String description;
 
-    @OneToMany
-    @JoinColumn(name = "ingredient_id")
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Ingredient> ingredients;
 
-    @OneToMany
-    @JoinColumn(name = "instruction_id")
+    @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Instruction> instructions;
-
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
 }

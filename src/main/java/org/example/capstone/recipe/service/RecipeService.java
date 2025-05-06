@@ -11,9 +11,12 @@ import org.example.capstone.recipe.domain.Recipe;
 import org.example.capstone.recipe.dto.IngredientDTO;
 import org.example.capstone.recipe.dto.InstructionDTO;
 import org.example.capstone.recipe.dto.RecipeResponse;
+import org.example.capstone.recipe.dto.UserInfoDTO;
 import org.example.capstone.recipe.repository.IngredientRepository;
 import org.example.capstone.recipe.repository.InstructionRepository;
 import org.example.capstone.recipe.repository.RecipeRepository;
+import org.example.capstone.statisfaction.domain.Satisfaction;
+import org.example.capstone.statisfaction.repository.SatisfactionRepository;
 import org.example.capstone.user.domain.User;
 import org.example.capstone.user.login.dto.CustomUserDetails;
 import org.example.capstone.user.repository.UserRepository;
@@ -45,6 +48,7 @@ public class RecipeService {
     private final RecipeRepository recipeRepository;
     private final IngredientRepository ingredientRepository;
     private final InstructionRepository instructionRepository;
+    private final SatisfactionRepository satisfactionRepository;
 
 
     private Mono<RecipeResponse> getRecipeFromFlask(Long recipeId) {
@@ -57,12 +61,13 @@ public class RecipeService {
                 .doOnError(e -> log.error("Flask API에서 레시피 정보 요청 실패: {}", e.getMessage()));
     }
 
-    private List<Instruction> saveEachInstruction(List<InstructionDTO> instructionDTOs) {
+    private List<Instruction> saveEachInstruction(List<InstructionDTO> instructionDTOs, Recipe recipe) {
         List<Instruction> instructions = new ArrayList<>();
         for (InstructionDTO dto : instructionDTOs) {
             Instruction instruction = Instruction.builder()
                     .instruction(dto.getInstruction())
                     .cookingTime(dto.getCookingTime())
+                    .recipe(recipe)
                     .build();
             instructionRepository.save(instruction);
             instructions.add(instruction);
@@ -70,11 +75,12 @@ public class RecipeService {
         return instructions;
     }
 
-    private List<Ingredient> saveEachIngridient(List<IngredientDTO> ingredientDTOS) {
+    private List<Ingredient> saveEachIngridient(List<IngredientDTO> ingredientDTOS, Recipe recipe) {
         List<Ingredient> ingredients = new ArrayList<>();
         for (IngredientDTO dto : ingredientDTOS) {
             Ingredient ingredient = Ingredient.builder()
                     .name(dto.getName())
+                    .recipe(recipe)
                     .build();
             ingredientRepository.save(ingredient);
             ingredients.add(ingredient);
@@ -91,26 +97,25 @@ public class RecipeService {
         if (recipeResponse == null) {
             throw new CustomException(ErrorCode.RECIPE_NOT_FOUND);
         }
-
-        // 어시스턴스 저장
-        List<InstructionDTO> instructions = recipeResponse.getInstructions();
-        List<Instruction> savedInstructions = saveEachInstruction(instructions);
-
-        //재료 저장
-        List<IngredientDTO> ingredients = recipeResponse.getIngredients();
-        List<Ingredient> savedIngredients = saveEachIngridient(ingredients);
-
         //유저 확인
         User user = userRepository.findById(userDetails.getUserId()).orElseThrow(() -> new CustomException(USER_NOT_FOUND));
 
-        //레시피 저장
         Recipe recipe = Recipe.builder()
                 .name(recipeResponse.getName())
                 .description(recipeResponse.getDescription())
-                .ingredients(savedIngredients)
-                .instructions(savedInstructions)
                 .user(user)
                 .build();
+
+        // 어시스턴스 저장
+        List<InstructionDTO> instructions = recipeResponse.getInstructions();
+        List<Instruction> savedInstructions = saveEachInstruction(instructions, recipe);
+
+        //재료 저장
+        List<IngredientDTO> ingredients = recipeResponse.getIngredients();
+        List<Ingredient> savedIngredients = saveEachIngridient(ingredients, recipe);
+
+        recipe.setIngredients(savedIngredients);
+        recipe.setInstructions(savedInstructions);
 
         Recipe savedRecipe = recipeRepository.save(recipe);
 
@@ -118,16 +123,31 @@ public class RecipeService {
         return recipeResponse;
     }
 
+    //유저의 만족도 검색
+    private List<Satisfaction> findSatisfaction(List<Recipe> recipes){
+        List<Satisfaction> satisfactions = new ArrayList<>();
+        for (Recipe recipe : recipes) {
+           satisfactions.add(satisfactionRepository.findByRecipe(recipe));
+        }
+        return satisfactions;
+    }
 
     //플라스크로 유저정보 전송
     public Mono<Void> sendUserInfoToFlask(CustomUserDetails userDetails) {
         log.debug("Flask API로 유저 정보 전송: {}", userDetails);
         User user = userRepository.findById(userDetails.getUserId()).orElseThrow(()-> new CustomException(USER_NOT_FOUND));
         List<Recipe> recipes= recipeRepository.findByUser(user);
+        List<Satisfaction> satisfactions = findSatisfaction(recipes);
+
+        UserInfoDTO info = UserInfoDTO.builder()
+                .user(user)
+                .recipes(recipes)
+                .satisfactions(satisfactions)
+                .build();
 
         return webClient.post()
                 .uri(chatEndpoint)
-                .bodyValue(recipes)
+                .bodyValue(info)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .doOnSuccess(v -> log.debug("Flask API로 유저 정보 전송 성공"))
