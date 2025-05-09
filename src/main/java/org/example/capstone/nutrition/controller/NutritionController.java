@@ -18,9 +18,17 @@ public class NutritionController {
     private final NutritionService nutritionService;
 
     @GetMapping("/api/recipe/{recipeId}/nutrition")
-    public ResponseEntity<NutritionDTO> getNutrition(@PathVariable Long recipeId,
+    public ResponseEntity<?> getNutrition(@PathVariable Long recipeId,
                                                      @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+
 
         return ResponseEntity.ok(nutritionService.fetchAndSaveNutritionFromFlask(recipeId, userDetails));
     }
+
+    @GetMapping("/api/recipe")
+    public ResponseEntity<?> getNutrition(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        return ResponseEntity.ok("로그인 성공");
+    }
+
 }

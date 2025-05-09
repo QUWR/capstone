@@ -59,10 +59,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 토큰에서 username 획득
         String username = jwtUtil.getUsername(token);
+        String userEmail = jwtUtil.getUserEmail(token);
 
         //user를 생성하여 값 set
         User user = User.builder()
                 .username(username)
+                .email(userEmail)
                 .build();
 
         //UserDetails에 회원 정보 객체 담기

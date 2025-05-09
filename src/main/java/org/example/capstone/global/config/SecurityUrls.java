@@ -20,6 +20,6 @@ public class SecurityUrls {
      * cors 허용할 URL
      */
     public static final List<String> ALLOWED_ORIGIN = Arrays.asList(
-
+        "http://localhost:3000/**"
     );
 }

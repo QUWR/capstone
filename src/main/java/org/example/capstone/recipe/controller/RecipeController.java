@@ -19,7 +19,7 @@ public class RecipeController {
     private final RecipeService recipeService;
 
     @GetMapping("/api/recipe/{recipeId}/asistance")
-    public ResponseEntity<RecipeResponse> fetchAndSaveRecipeFromFlask(@PathVariable Long recipeId,
+    public ResponseEntity<?> fetchAndSaveRecipeFromFlask(@PathVariable Long recipeId,
                                                        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         return ResponseEntity.ok(recipeService.fetchAndSaveRecipeFromFlask(recipeId, userDetails));
@@ -27,6 +27,6 @@ public class RecipeController {
 
     @PostMapping("/api/chat")
     public void sendInfoToFlask(@AuthenticationPrincipal CustomUserDetails userDetails){
-        recipeService.sendUserInfoToFlask(userDetails);
+        recipeService.sendInfo(userDetails);
     }
 }

@@ -45,6 +45,18 @@ public class JwtUtil {
 
     }
 
+    public String getUserEmail(String token) {
+        return Jwts.parser()
+                .verifyWith(getSignKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userEmail", String.class);
+
+    }
+
+
+
     /**
      * AccessToken 발급
      *

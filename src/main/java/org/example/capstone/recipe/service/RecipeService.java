@@ -75,7 +75,7 @@ public class RecipeService {
         return instructions;
     }
 
-    private List<Ingredient> saveEachIngridient(List<IngredientDTO> ingredientDTOS, Recipe recipe) {
+    private List<Ingredient> saveEachIngredient(List<IngredientDTO> ingredientDTOS, Recipe recipe) {
         List<Ingredient> ingredients = new ArrayList<>();
         for (IngredientDTO dto : ingredientDTOS) {
             Ingredient ingredient = Ingredient.builder()
@@ -112,7 +112,7 @@ public class RecipeService {
 
         //재료 저장
         List<IngredientDTO> ingredients = recipeResponse.getIngredients();
-        List<Ingredient> savedIngredients = saveEachIngridient(ingredients, recipe);
+        List<Ingredient> savedIngredients = saveEachIngredient(ingredients, recipe);
 
         recipe.setIngredients(savedIngredients);
         recipe.setInstructions(savedInstructions);
@@ -132,9 +132,7 @@ public class RecipeService {
         return satisfactions;
     }
 
-    //플라스크로 유저정보 전송
-    public Mono<Void> sendUserInfoToFlask(CustomUserDetails userDetails) {
-        log.debug("Flask API로 유저 정보 전송: {}", userDetails);
+    public void sendInfo(CustomUserDetails userDetails){
         User user = userRepository.findById(userDetails.getUserId()).orElseThrow(()-> new CustomException(USER_NOT_FOUND));
         List<Recipe> recipes= recipeRepository.findByUser(user);
         List<Satisfaction> satisfactions = findSatisfaction(recipes);
@@ -144,6 +142,21 @@ public class RecipeService {
                 .recipes(recipes)
                 .satisfactions(satisfactions)
                 .build();
+
+        try {
+            // block()을 통해 비동기 요청을 동기적으로 처리
+            sendUserInfoToFlask(info).block();
+            log.info("사용자 정보가 Flask API로 성공적으로 전송됨: 사용자 ID = {}", user.getId());
+        } catch (Exception e) {
+            log.error("Flask API로 사용자 정보 전송 중 오류 발생: {}", e.getMessage());
+            throw new CustomException(ErrorCode.INFO_SEND_FAIL);
+        }
+
+    }
+
+    //플라스크로 유저정보 전송
+    public Mono<Void> sendUserInfoToFlask(UserInfoDTO info) {
+        log.debug("Flask API로 유저 정보 전송: {}", info);
 
         return webClient.post()
                 .uri(chatEndpoint)
