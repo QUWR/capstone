@@ -2,7 +2,6 @@ package org.example.capstone.nutrition.controller;
 
 
 import lombok.RequiredArgsConstructor;
-import org.example.capstone.nutrition.dto.NutritionDTO;
 import org.example.capstone.nutrition.service.NutritionService;
 import org.example.capstone.user.login.dto.CustomUserDetails;
 import org.springframework.http.ResponseEntity;

@@ -2,7 +2,7 @@ package org.example.capstone.recipe.controller;
 
 
 import lombok.RequiredArgsConstructor;
-import org.example.capstone.recipe.dto.RecipeResponse;
+
 import org.example.capstone.recipe.service.RecipeService;
 import org.example.capstone.user.login.dto.CustomUserDetails;
 import org.springframework.http.ResponseEntity;
