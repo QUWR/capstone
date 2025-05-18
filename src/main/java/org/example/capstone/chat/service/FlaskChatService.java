@@ -7,7 +7,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,34 +25,30 @@ import java.io.IOException;
 public class FlaskChatService {
 
     @Value("${flask.api.endpoints.chat}")
-    private String flaskApiUrl;
+    private String flaskChatApiUrl;
 
     private final ObjectMapper objectMapper;
 
-    public ChatResponse sendRequestToFlask(ChatRequest chatRequest) throws IOException {
+    public ChatResponse sendChatToFlask(ChatRequest chatRequest) throws IOException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost uploadFile = new HttpPost(flaskApiUrl);
+            HttpPost httpPost = new HttpPost(flaskChatApiUrl);
 
-            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            builder.addTextBody("message", chatRequest.getMessage(), ContentType.TEXT_PLAIN);
-            builder.addTextBody("username", chatRequest.getUsername(), ContentType.TEXT_PLAIN);
+            // 텍스트 메시지만 전송
+            StringEntity entity = new StringEntity(
+                    objectMapper.writeValueAsString(Map.of(
+                            "message", chatRequest.getMessage(),
+                            "username", chatRequest.getUsername()
+                    )),
+                    ContentType.APPLICATION_JSON
+            );
 
-            if (chatRequest.getImage() != null && !chatRequest.getImage().isEmpty()) {
-                builder.addBinaryBody(
-                        "image",
-                        chatRequest.getImage().getInputStream(),
-                        ContentType.MULTIPART_FORM_DATA,
-                        chatRequest.getImage().getOriginalFilename()
-                );
-            }
+            httpPost.setEntity(entity);
+            httpPost.setHeader("Content-Type", "application/json");
 
-            HttpEntity multipart = builder.build();
-            uploadFile.setEntity(multipart);
-
-            try (CloseableHttpResponse response = httpClient.execute(uploadFile)) {
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
                 HttpEntity responseEntity = response.getEntity();
                 String responseString = EntityUtils.toString(responseEntity);
-                log.info("Flask API Response: {}", responseString);
+                log.info("Flask Chat API Response: {}", responseString);
                 return objectMapper.readValue(responseString, ChatResponse.class);
             }
         }

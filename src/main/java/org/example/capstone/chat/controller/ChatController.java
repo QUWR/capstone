@@ -41,8 +41,8 @@ public class ChatController {
                     "메시지를 처리 중입니다..."
             );
 
-            // Flask 서버에 요청 전송
-            ChatResponse response = flaskChatService.sendRequestToFlask(chatRequest);
+            // Flask 서버에 요청 전송 (이미지 없이 텍스트만)
+            ChatResponse response = flaskChatService.sendChatToFlask(chatRequest);
 
             // 응답을 사용자에게 전송
             messagingTemplate.convertAndSendToUser(
