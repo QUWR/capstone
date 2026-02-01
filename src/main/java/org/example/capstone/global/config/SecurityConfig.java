@@ -1,6 +1,5 @@
 package org.example.capstone.global.config;
 
-
 import lombok.RequiredArgsConstructor;
 import org.example.capstone.global.filter.JwtFilter;
 import org.example.capstone.global.filter.LoginFilter;
@@ -33,14 +32,12 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final UserRepository userRepository;
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         // 로그인 경로를 설정하기 위해 LoginFilter 생성
         LoginFilter loginFilter = new LoginFilter(jwtUtil, authenticationManager(authenticationConfiguration), userRepository);
         loginFilter.setFilterProcessesUrl("/api/auth/login");
-
 
         return http
                 //cors 설정
@@ -61,7 +58,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 //필터 위치
                 .addFilterBefore(
-                        new JwtFilter(jwtUtil),
+                        new JwtFilter(jwtUtil, userRepository),
                         LoginFilter.class
                 )
                 .addFilterAt(
@@ -86,11 +83,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOriginPatterns(SecurityUrls.ALLOWED_ORIGIN);
+        // 모든 출처 허용 (개발 중에는 편의를 위해)
+        configuration.setAllowedOriginPatterns(Collections.singletonList("*"));
 
+        // 모든 HTTP 메서드 허용
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowCredentials(true);
-        configuration.setAllowedHeaders((Collections.singletonList("*")));
+        configuration.setAllowedHeaders(Collections.singletonList("*"));
+
+        // WebSocket 헤더 허용
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
         configuration.setMaxAge(3600L);
 
         //모든 경로에 CORS 설정
@@ -106,8 +108,4 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
-
-
-
-
 }

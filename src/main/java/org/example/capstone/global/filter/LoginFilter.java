@@ -20,6 +20,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Slf4j
@@ -60,14 +62,28 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         // UserDetails
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
+        // 사용자 ID 확인 및 로깅
+        Long userId = customUserDetails.getUserId();
+        log.info("인증 성공 - 사용자: {}, 이메일: {}, ID: {}",
+                customUserDetails.getUsername(),
+                customUserDetails.getUserEmail(),
+                userId);
+
+        if (userId == null) {
+            log.warn("인증된 사용자의 ID가 null입니다. CustomUserDetails: {}", customUserDetails);
+        }
+
         // AccessToken 발급
         String accessToken = jwtUtil.createAccessToken(customUserDetails);
 
         // RefreshToken 발급
         String refreshToken = jwtUtil.createRefreshToken(customUserDetails);
 
-        // 헤더에 AccessToken 추가
-        response.addHeader("Authorization", "Bearer " + accessToken);
+        // 헤더에 AccessToken 추가 - 수정: 올바른 헤더 설정 방법
+        response.setHeader("Authorization", "Bearer " + accessToken);
+
+        // CORS 문제를 방지하기 위해 Access-Control-Expose-Headers 헤더 추가
+        response.setHeader("Access-Control-Expose-Headers", "Authorization");
 
         // 쿠키에 refreshToken 추가
         Cookie cookie = new Cookie("refreshToken", refreshToken);
@@ -77,17 +93,32 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         cookie.setMaxAge((int) (jwtUtil.getRefreshExpirationTime() / 1000)); // 쿠키 maxAge는 초 단위 이므로, 밀리초를 1000으로 나눔
         response.addCookie(cookie);
 
+        // JSON 응답 생성
+        Map<String, String> tokenMap = new HashMap<>();
+        tokenMap.put("accessToken", accessToken);
+        tokenMap.put("refreshToken", refreshToken);
+        tokenMap.put("username", customUserDetails.getUsername());
+
+        // JSON 응답 전송
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("accessToken: " + accessToken + '\n');
-        response.getWriter().write("refreshToken: " + refreshToken);
+        objectMapper.writeValue(response.getWriter(), tokenMap);
     }
 
     //로그인 실패시 실행하는 메소드
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response, AuthenticationException failed) throws IOException {
-
         log.error("로그인 실패: {}", failed.getMessage());
         response.setStatus(401);
+
+        // JSON 오류 응답 생성
+        Map<String, String> errorMap = new HashMap<>();
+        errorMap.put("error", "로그인에 실패했습니다");
+        errorMap.put("message", failed.getMessage());
+
+        // JSON 응답 전송
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), errorMap);
     }
 }

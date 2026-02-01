@@ -1,6 +1,5 @@
 package org.example.capstone.global.util;
 
-
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -34,7 +33,9 @@ public class JwtUtil {
     private static final String ACCESS_CATEGORY = "access";
     private static final String REFRESH_CATEGORY = "refresh";
 
-
+    /**
+     * 토큰에서 사용자명 추출
+     */
     public String getUsername(String token) {
         return Jwts.parser()
                 .verifyWith(getSignKey())
@@ -42,9 +43,11 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload()
                 .get("username", String.class);
-
     }
 
+    /**
+     * 토큰에서 이메일 추출
+     */
     public String getUserEmail(String token) {
         return Jwts.parser()
                 .verifyWith(getSignKey())
@@ -52,10 +55,7 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload()
                 .get("userEmail", String.class);
-
     }
-
-
 
     /**
      * AccessToken 발급
@@ -77,6 +77,10 @@ public class JwtUtil {
      * @return
      */
     private String createToken(String category, CustomUserDetails customUserDetails, Long expiredAt){
+        // 디버그 로그 추가
+        log.debug("토큰 생성 - 사용자명: {}, 이메일: {}",
+                customUserDetails.getUsername(),
+                customUserDetails.getUserEmail());
 
         return Jwts.builder()
                 .subject(customUserDetails.getUsername())
@@ -112,7 +116,7 @@ public class JwtUtil {
         return createToken(REFRESH_CATEGORY, customUserDetails, refreshTokenExpTime);
     }
 
-    public boolean validateToken(String token)throws ExpiredJwtException {
+    public boolean validateToken(String token) throws ExpiredJwtException {
         try{
             Jwts.parser()
                     .verifyWith(getSignKey())
@@ -156,5 +160,4 @@ public class JwtUtil {
                 .parseSignedClaims(token)
                 .getPayload();
     }
-
 }

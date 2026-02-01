@@ -25,7 +25,9 @@ public enum ErrorCode {
     RECIPE_NOT_FOUND(HttpStatus.NOT_FOUND, "레시피를 찾을 수 없습니다."),
     NUTRITION_NOT_FOUND(HttpStatus.NOT_FOUND, "영양 성분 정보를 가져올 수 없습니다."),
 
-    INFO_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "유저 정보 전송에 실패 했습니다.");
+    // 추가
+    SATISFACTION_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 만족도 평가가 존재합니다."),
+    SATISFACTION_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "만족도 평가 저장에 실패했습니다.");
 
 
     private final HttpStatus status;

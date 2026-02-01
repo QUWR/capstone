@@ -12,28 +12,33 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(NullPointerException.class)
-    public String handleNullPointerException() {
-        log.error("NullPointer Exception 처리 시작");
-        return "NullPointer Exception 핸들링";
-    }
-
-    @ExceptionHandler(InternalError.class)
-    public String handleInternalError() {
-        log.error("InternalError 처리 시작");
-        return "InternalError 핸들링";
-    }
-
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException e) {
-        log.error("CustomException : {}", e.getMessage(), e);
-
-        ErrorCode errorCode = e.getErrorCode();
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .errorCode(errorCode)
+        log.error("사용자 정의 예외 발생: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.builder()
+                .errorCode(e.getErrorCode())
                 .errorMessage(e.getMessage())
                 .build();
-        return ResponseEntity.status(errorCode.getStatus()).body(errorResponse);
+        return new ResponseEntity<>(response, e.getErrorCode().getStatus());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+        log.error("잘못된 인자 예외 발생: {}", e.getMessage());
+        ErrorResponse response = ErrorResponse.builder()
+                .errorCode(ErrorCode.INVALID_REQUEST)
+                .errorMessage(e.getMessage())
+                .build();
+        return new ResponseEntity<>(response, ErrorCode.INVALID_REQUEST.getStatus());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
+        log.error("일반 예외 발생: {}", e.getMessage(), e);
+        ErrorResponse response = ErrorResponse.builder()
+                .errorCode(ErrorCode.INTERNAL_SERVER_ERROR)
+                .errorMessage("서버에 문제가 발생했습니다: " + e.getMessage())
+                .build();
+        return new ResponseEntity<>(response, ErrorCode.INTERNAL_SERVER_ERROR.getStatus());
     }
 }
